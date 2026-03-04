@@ -90,36 +90,29 @@ export class TransactionService extends Service {
     return monthlyData;
   }
 
-  async overviewByMonth() {
+  async overviewByMonth(month?: number, year?: number) {
     console.info('Using TransactionV2Service for overviewByMonth');
     const today = new Date();
-    const currentYear = today.getFullYear();
-    const currentMonth = today.getMonth();
+    const targetYear = year ?? today.getFullYear();
+    const targetMonth = month ?? today.getMonth() + 1; // 1–12
 
-    const currentMonthStart = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-01`;
-    const currentMonthLastDay = new Date(
-      currentYear,
-      currentMonth + 1,
-      0
-    ).getDate();
-    const currentMonthEnd = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(currentMonthLastDay).padStart(2, '0')}`;
+    const currentMonthStart = `${targetYear}-${String(targetMonth).padStart(2, '0')}-01`;
+    const currentMonthLastDay = new Date(targetYear, targetMonth, 0).getDate();
+    const currentMonthEnd = `${targetYear}-${String(targetMonth).padStart(2, '0')}-${String(currentMonthLastDay).padStart(2, '0')}`;
 
     const { transactions: currentMonthTransactions } =
       await this.getTransactionsByDateRange(currentMonthStart, currentMonthEnd);
     const { income: totalIncomeValue, expense: totalExpenseValue } =
       this.getTotalValueGroupedByType(currentMonthTransactions);
 
-    const lastMonthDate = new Date(currentYear, currentMonth - 1, 1);
+    // Derive the previous month, handling January → December of prior year
+    const lastMonthDate = new Date(targetYear, targetMonth - 2, 1);
     const lastMonthYear = lastMonthDate.getFullYear();
-    const lastMonth = lastMonthDate.getMonth();
+    const lastMonth = lastMonthDate.getMonth() + 1; // 1–12
 
-    const lastMonthStart = `${lastMonthYear}-${String(lastMonth + 1).padStart(2, '0')}-01`;
-    const lastMonthLastDay = new Date(
-      lastMonthYear,
-      lastMonth + 1,
-      0
-    ).getDate();
-    const lastMonthEnd = `${lastMonthYear}-${String(lastMonth + 1).padStart(2, '0')}-${String(lastMonthLastDay).padStart(2, '0')}`;
+    const lastMonthStart = `${lastMonthYear}-${String(lastMonth).padStart(2, '0')}-01`;
+    const lastMonthLastDay = new Date(lastMonthYear, lastMonth, 0).getDate();
+    const lastMonthEnd = `${lastMonthYear}-${String(lastMonth).padStart(2, '0')}-${String(lastMonthLastDay).padStart(2, '0')}`;
 
     const { transactions: lastMonthTransactions } =
       await this.getTransactionsByDateRange(lastMonthStart, lastMonthEnd);
@@ -155,14 +148,14 @@ export class TransactionService extends Service {
     return data;
   }
 
-  async getMonthlyExpensesByCategory() {
+  async getMonthlyExpensesByCategory(month?: number, year?: number) {
     const today = new Date();
-    const currentYear = today.getFullYear();
-    const currentMonth = today.getMonth();
+    const targetYear = year ?? today.getFullYear();
+    const targetMonth = month ?? today.getMonth() + 1; // 1–12
 
-    const startDate = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-01`;
-    const lastDay = new Date(currentYear, currentMonth + 1, 0).getDate();
-    const endDate = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+    const startDate = `${targetYear}-${String(targetMonth).padStart(2, '0')}-01`;
+    const lastDay = new Date(targetYear, targetMonth, 0).getDate();
+    const endDate = `${targetYear}-${String(targetMonth).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
 
     const [{ transactions }, { categories }] = await Promise.all([
       this.getTransactionsByDateRange(startDate, endDate),

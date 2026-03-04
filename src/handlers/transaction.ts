@@ -174,7 +174,9 @@ export function mountTransactionRoutes(router: Router) {
   router.get('/overview/by-month', async (req, res) => {
     try {
       const service = new TransactionService();
-      const response = await service.overviewByMonth();
+      const month = req.query.month ? parseInt(req.query.month as string, 10) : undefined;
+      const year = req.query.year ? parseInt(req.query.year as string, 10) : undefined;
+      const response = await service.overviewByMonth(month, year);
       res.json(response);
     } catch (error) {
       console.error(error);

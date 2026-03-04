@@ -5,7 +5,9 @@ export function mountCategoryRoutes(router: Router) {
   router.get('/monthly-expenses-by-category', async (req, res) => {
     try {
       const service = new TransactionService();
-      const result = await service.getMonthlyExpensesByCategory();
+      const month = req.query.month ? parseInt(req.query.month as string, 10) : undefined;
+      const year = req.query.year ? parseInt(req.query.year as string, 10) : undefined;
+      const result = await service.getMonthlyExpensesByCategory(month, year);
 
       res.json(result);
     } catch (error) {
