@@ -3,6 +3,7 @@ import {
   TransactionBaseResponse,
   TransactionRequestParams,
   Category,
+  CategoryComparisonHistory,
 } from '../types/transactions';
 import { Service } from './Service';
 
@@ -88,6 +89,72 @@ export class TransactionService extends Service {
     }
 
     return monthlyData;
+  }
+
+  async getCategoryComparisonHistory(
+    startDate?: string,
+    endDate?: string,
+    categoryIds?: number[]
+  ): Promise<CategoryComparisonHistory[]> {
+    const today = new Date();
+    const start = startDate ? new Date(startDate) : new Date(2025, 0, 1);
+    const end = endDate ? new Date(endDate) : today;
+
+    const startMonth = new Date(start.getFullYear(), start.getMonth(), 1);
+    const endMonth = new Date(end.getFullYear(), end.getMonth(), 1);
+
+    const { categories } = await this.getCategories();
+    const filteredCategories = categoryIds?.length
+      ? categories.filter((c) => categoryIds.includes(c.id))
+      : categories;
+
+    const categoryMap = new Map<number, CategoryComparisonHistory>(
+      filteredCategories.map((c) => [
+        c.id,
+        { category_id: c.id, category_name: c.name, color: c.color, data: [] },
+      ])
+    );
+
+    const currentDate = new Date(startMonth);
+    while (currentDate <= endMonth) {
+      const year = currentDate.getFullYear();
+      const month = currentDate.getMonth();
+      // must be format YYYY-MM-DD
+      const startDateStr = `${year}-${String(month + 1).padStart(2, '0')}-01`;
+      const lastDay = new Date(year, month + 1, 0).getDate();
+      const endDateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+
+      const { transactions } = await this.getTransactionsByDateRange(
+        startDateStr,
+        endDateStr
+      );
+
+      const monthLabel = currentDate.toLocaleString('default', { month: 'short' });
+      const yearLabel = currentDate.getFullYear().toString().slice(-2);
+      const monthStr = `${monthLabel} ${yearLabel}`;
+
+      for (const [catId, catData] of categoryMap) {
+        const catTransactions = transactions.filter(
+          (t) => t.category_id === catId
+        );
+        const expense = catTransactions
+          .filter((t) => t.type === 'expense')
+          .reduce((sum, t) => sum + t.amount, 0);
+        const income = catTransactions
+          .filter((t) => t.type === 'income')
+          .reduce((sum, t) => sum + t.amount, 0);
+
+        if (expense || income) {
+          catData.data.push({ month: monthStr, expense, income });
+        }
+      }
+
+      currentDate.setMonth(currentDate.getMonth() + 1);
+    }
+
+    return Array.from(categoryMap.values()).filter(
+      (cat) => cat.data.length > 0
+    );
   }
 
   async overviewByMonth(month?: number, year?: number) {

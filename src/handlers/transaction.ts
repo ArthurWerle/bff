@@ -201,4 +201,27 @@ export function mountTransactionRoutes(router: Router) {
       });
     }
   });
+
+  router.get('/category-comparison-history', async (req, res) => {
+    try {
+      const service = new TransactionService();
+      const startDate = req.query.start_date as string | undefined;
+      const endDate = req.query.end_date as string | undefined;
+      const categoryIds = req.query.category
+        ? (req.query.category as string).split(',').map(Number)
+        : undefined;
+      const result = await service.getCategoryComparisonHistory(
+        startDate,
+        endDate,
+        categoryIds
+      );
+      res.json(result);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({
+        error: 'Failed to fetch data /category-comparison-history',
+        cause: error,
+      });
+    }
+  });
 }
