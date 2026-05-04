@@ -41,3 +41,16 @@ export interface Category {
   created_at: string;
   updated_at: string;
 }
+
+export type CategoryComparisonDataPoint = {
+  month: string;
+  expense: number;
+  income: number;
+};
+
+export type CategoryComparisonHistory = {
+  category_id: number;
+  category_name: string;
+  color: string;
+  data: CategoryComparisonDataPoint[];
+};
