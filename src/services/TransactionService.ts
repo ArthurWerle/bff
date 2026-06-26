@@ -193,17 +193,21 @@ export class TransactionService extends Service {
         currentMonth: totalIncomeValue,
         lastMonth: lastMonthTotalIncomeValue,
         percentageVariation:
-          ((totalIncomeValue - lastMonthTotalIncomeValue) /
-            lastMonthTotalIncomeValue) *
-          100,
+          lastMonthTotalIncomeValue === 0
+            ? null
+            : ((totalIncomeValue - lastMonthTotalIncomeValue) /
+                lastMonthTotalIncomeValue) *
+              100,
       },
       expense: {
         currentMonth: totalExpenseValue,
         lastMonth: lastMonthTotalExpenseValue,
         percentageVariation:
-          ((totalExpenseValue - lastMonthTotalExpenseValue) /
-            lastMonthTotalExpenseValue) *
-          100,
+          lastMonthTotalExpenseValue === 0
+            ? null
+            : ((totalExpenseValue - lastMonthTotalExpenseValue) /
+                lastMonthTotalExpenseValue) *
+              100,
       },
     };
   }
