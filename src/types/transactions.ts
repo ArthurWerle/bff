@@ -1,3 +1,10 @@
+export interface Location {
+  id: number;
+  name: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export type TransactionRequestParams = {
   amount: number;
   type: 'income' | 'expense';
@@ -9,6 +16,7 @@ export type TransactionRequestParams = {
   start_date?: string;
   end_date?: string;
   date: string;
+  location?: string;
 };
 
 export interface Transaction {
@@ -24,6 +32,8 @@ export interface Transaction {
   date: string;
   start_date?: string;
   end_date?: string;
+  location_id?: number;
+  location?: Location;
   created_at: string;
   updated_at: string;
 }
