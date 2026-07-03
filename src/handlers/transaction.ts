@@ -192,7 +192,8 @@ export function mountTransactionRoutes(router: Router) {
       const service = new TransactionService();
       const monthlyData = await service.getIncomeAndExpenseComparisonHistory();
 
-      res.json(monthlyData.reverse());
+      // Chronological (oldest first) — the order charts consume directly.
+      res.json(monthlyData);
     } catch (error) {
       console.error(error);
       res.status(500).json({

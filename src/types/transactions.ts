@@ -11,7 +11,7 @@ export type TransactionRequestParams = {
   is_recurring: boolean;
   category_id: number;
   description: string;
-  frequency?: 'monthly' | 'daily' | 'weekly' | 'yearly';
+  frequency?: 'monthly';
   created_by_id: number;
   start_date?: string;
   end_date?: string;
@@ -24,7 +24,8 @@ export interface Transaction {
   created_by_id?: number;
   is_recurring?: boolean;
   category_id: number;
-  frequency?: string;
+  frequency?: 'monthly';
+  prepaid_from_id?: number;
   amount: number;
   subtype?: string;
   type: 'income' | 'expense';
