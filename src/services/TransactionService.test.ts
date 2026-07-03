@@ -58,6 +58,45 @@ describe('getTotalValueGroupedByType', () => {
     expect(result.income).toBe(0);
     expect(result.expense).toBe(400);
   });
+
+  it('excludes prepayment rows (consumption basis)', () => {
+    const transactions: Transaction[] = [
+      makeTx({ type: 'expense', amount: 100 }),
+      makeTx({ type: 'expense', amount: 2500, prepaid_from_id: 42 }),
+    ];
+    const result = service.getTotalValueGroupedByType(transactions);
+    expect(result.expense).toBe(100);
+  });
+});
+
+// ---- getIncomeAndExpenseComparisonHistory ----
+
+describe('getIncomeAndExpenseComparisonHistory', () => {
+  it('emits a chronological data point for every month, including empty ones', async () => {
+    const service = new TransactionService();
+
+    // Every month in range returns no transactions.
+    jest
+      .spyOn(service, 'getTransactionsByDateRange')
+      .mockResolvedValue({ count: 0, transactions: [] });
+
+    const result = await service.getIncomeAndExpenseComparisonHistory();
+
+    const start = new Date(2025, 0, 1);
+    const today = new Date();
+    const expectedMonths =
+      (today.getFullYear() - start.getFullYear()) * 12 +
+      today.getMonth() -
+      start.getMonth() +
+      1;
+
+    expect(result).toHaveLength(expectedMonths);
+    expect(result[0].month).toMatch(/25$/); // starts at Jan 2025, oldest first
+    result.forEach((point) => {
+      expect(point.income).toBe(0);
+      expect(point.expense).toBe(0);
+    });
+  });
 });
 
 // ---- overviewByMonth ----

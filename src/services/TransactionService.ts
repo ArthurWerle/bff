@@ -36,6 +36,11 @@ export class TransactionService extends Service {
   getTotalValueGroupedByType(transactions: Transaction[]) {
     return transactions.reduce(
       (acc, curr) => {
+        // Prepayment rows are cash records; the original recurring schedule
+        // already accounts for each covered month (consumption basis).
+        if (curr.prepaid_from_id) {
+          return acc;
+        }
         if (curr.type === 'income') {
           acc.income += curr.amount;
         } else {
@@ -73,17 +78,17 @@ export class TransactionService extends Service {
       );
       const { income, expense } = this.getTotalValueGroupedByType(transactions);
 
-      if (expense || income) {
-        const monthLabel = currentDate.toLocaleString('default', {
-          month: 'short',
-        });
-        const yearLabel = currentDate.getFullYear().toString().slice(-2);
-        monthlyData.push({
-          month: `${monthLabel} ${yearLabel}`,
-          expense,
-          income,
-        });
-      }
+      // Every month in range gets a data point (zeros included), so charts
+      // keep a continuous time axis.
+      const monthLabel = currentDate.toLocaleString('default', {
+        month: 'short',
+      });
+      const yearLabel = currentDate.getFullYear().toString().slice(-2);
+      monthlyData.push({
+        month: `${monthLabel} ${yearLabel}`,
+        expense,
+        income,
+      });
 
       currentDate.setMonth(currentDate.getMonth() + 1);
     }
@@ -135,7 +140,7 @@ export class TransactionService extends Service {
 
       for (const [catId, catData] of categoryMap) {
         const catTransactions = transactions.filter(
-          (t) => t.category_id === catId
+          (t) => t.category_id === catId && !t.prepaid_from_id
         );
         const expense = catTransactions
           .filter((t) => t.type === 'expense')
@@ -233,7 +238,9 @@ export class TransactionService extends Service {
       this.getCategories(),
     ]);
 
-    const expenses = transactions.filter((t) => t.type === 'expense');
+    const expenses = transactions.filter(
+      (t) => t.type === 'expense' && !t.prepaid_from_id
+    );
 
     const totalValuesByCategory = expenses.reduce(
       (acc, transaction) => {
