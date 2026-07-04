@@ -5,16 +5,27 @@ export function mountCategoryRoutes(router: Router) {
   router.get('/monthly-expenses-by-category', async (req, res) => {
     try {
       const service = new TransactionService();
-      const month = req.query.month ? parseInt(req.query.month as string, 10) : undefined;
-      const year = req.query.year ? parseInt(req.query.year as string, 10) : undefined;
-      const result = await service.getMonthlyExpensesByCategory(month, year);
+      const response = await service.get<{
+        categories: { category_name: string; total: number }[];
+      }>('/transactions/reports/monthly-expenses-by-category', {
+        month: req.query.month,
+        year: req.query.year,
+      });
 
-      res.json(result);
-    } catch (error) {
+      // Adapt the ordered array to the Record shape the frontend consumes;
+      // JS objects preserve insertion order, so the chart keeps its sorting.
+      res
+        .status(response.status)
+        .json(
+          Object.fromEntries(
+            response.data.categories.map((c) => [c.category_name, c.total])
+          )
+        );
+    } catch (error: any) {
       console.error(error);
-      res.status(500).json({
-        error: 'Failed to fetch data /total-values-by-category',
-        cause: error,
+      res.status(error?.response?.status || 500).json({
+        error: 'Failed to fetch data /monthly-expenses-by-category',
+        cause: error?.response?.data ?? error,
       });
     }
   });

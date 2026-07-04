@@ -18,10 +18,11 @@ app.use(
 );
 
 app.use(morgan('combined'));
-app.use(errorHandler);
-
 app.use(express.json());
 app.use('/api/bff', routes);
+
+// Express error middleware must be registered after the routes it covers.
+app.use(errorHandler);
 
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
