@@ -95,7 +95,24 @@ describe('getIncomeAndExpenseComparisonHistory', () => {
     result.forEach((point) => {
       expect(point.income).toBe(0);
       expect(point.expense).toBe(0);
+      expect(point.balance).toBe(0);
     });
+  });
+
+  it('reports net cash flow (balance) per month', async () => {
+    const service = new TransactionService();
+
+    jest.spyOn(service, 'getTransactionsByDateRange').mockResolvedValue({
+      count: 2,
+      transactions: [
+        makeTx({ type: 'income', amount: 5000 }),
+        makeTx({ type: 'expense', amount: 3200 }),
+      ],
+    });
+
+    const result = await service.getIncomeAndExpenseComparisonHistory();
+
+    expect(result[0].balance).toBe(1800);
   });
 });
 
