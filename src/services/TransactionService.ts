@@ -56,8 +56,12 @@ export class TransactionService extends Service {
   }
 
   async getIncomeAndExpenseComparisonHistory() {
-    const monthlyData: { month: string; expense: number; income: number }[] =
-      [];
+    const monthlyData: {
+      month: string;
+      expense: number;
+      income: number;
+      balance: number;
+    }[] = [];
 
     // Start from January 2025
     const startDate = new Date(2025, 0, 1);
@@ -88,6 +92,7 @@ export class TransactionService extends Service {
         month: `${monthLabel} ${yearLabel}`,
         expense,
         income,
+        balance: income - expense,
       });
 
       currentDate.setMonth(currentDate.getMonth() + 1);
@@ -244,12 +249,13 @@ export class TransactionService extends Service {
 
     const totalValuesByCategory = expenses.reduce(
       (acc, transaction) => {
+        // Category is required, but its row may have been soft-deleted and
+        // dropped from /categories — keep the money visible under 'Other'
+        // instead of silently shrinking the chart.
         const category = categories.find(
           (category) => category.id === transaction.category_id
         );
-        if (!category) return acc;
-
-        const categoryName = category.name;
+        const categoryName = category?.name ?? 'Other';
         const categoryValue = acc[categoryName] || 0;
         return { ...acc, [categoryName]: categoryValue + transaction.amount };
       },

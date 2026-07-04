@@ -171,6 +171,20 @@ export function mountTransactionRoutes(router: Router) {
 
   router.use('/transactions', transactionsRouter);
 
+  router.get('/projections/current-month', async (req, res) => {
+    try {
+      const service = new TransactionService();
+      const response = await service.get('/transactions/projections/current-month');
+      res.status(response.status).json(response.data);
+    } catch (error: any) {
+      console.error(error);
+      res.status(error?.response?.status || 500).json({
+        error: 'Failed to proxy request to GET /transactions/projections/current-month',
+        cause: error?.response?.data ?? error,
+      });
+    }
+  });
+
   router.get('/overview/by-month', async (req, res) => {
     try {
       const service = new TransactionService();
