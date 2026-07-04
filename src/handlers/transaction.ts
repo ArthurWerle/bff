@@ -50,7 +50,8 @@ export function mountTransactionRoutes(router: Router) {
         cause
       );
       res.status(status).json({
-        error: 'Failed to proxy request to GET /transactions/average/by-category',
+        error:
+          'Failed to proxy request to GET /transactions/average/by-category',
         cause,
       });
     }
@@ -174,12 +175,15 @@ export function mountTransactionRoutes(router: Router) {
   router.get('/projections/current-month', async (req, res) => {
     try {
       const service = new TransactionService();
-      const response = await service.get('/transactions/projections/current-month');
+      const response = await service.get(
+        '/transactions/projections/current-month'
+      );
       res.status(response.status).json(response.data);
     } catch (error: any) {
       console.error(error);
       res.status(error?.response?.status || 500).json({
-        error: 'Failed to proxy request to GET /transactions/projections/current-month',
+        error:
+          'Failed to proxy request to GET /transactions/projections/current-month',
         cause: error?.response?.data ?? error,
       });
     }
@@ -188,15 +192,19 @@ export function mountTransactionRoutes(router: Router) {
   router.get('/overview/by-month', async (req, res) => {
     try {
       const service = new TransactionService();
-      const month = req.query.month ? parseInt(req.query.month as string, 10) : undefined;
-      const year = req.query.year ? parseInt(req.query.year as string, 10) : undefined;
-      const response = await service.overviewByMonth(month, year);
-      res.json(response);
-    } catch (error) {
+      const response = await service.get(
+        '/transactions/reports/month-overview',
+        {
+          month: req.query.month,
+          year: req.query.year,
+        }
+      );
+      res.status(response.status).json(response.data);
+    } catch (error: any) {
       console.error(error);
-      res.status(500).json({
+      res.status(error?.response?.status || 500).json({
         error: 'Failed to fetch data /overview/by-month',
-        cause: error,
+        cause: error?.response?.data ?? error,
       });
     }
   });
@@ -204,15 +212,19 @@ export function mountTransactionRoutes(router: Router) {
   router.get('/expense-comparsion-history', async (req, res) => {
     try {
       const service = new TransactionService();
-      const monthlyData = await service.getIncomeAndExpenseComparisonHistory();
-
-      // Chronological (oldest first) — the order charts consume directly.
-      res.json(monthlyData);
-    } catch (error) {
+      const response = await service.get(
+        '/transactions/reports/monthly-history',
+        {
+          start_date: HISTORY_EPOCH,
+          end_date: todayISODate(),
+        }
+      );
+      res.status(response.status).json(response.data);
+    } catch (error: any) {
       console.error(error);
-      res.status(500).json({
+      res.status(error?.response?.status || 500).json({
         error: 'Failed to fetch data /expense-comparsion-history',
-        cause: error,
+        cause: error?.response?.data ?? error,
       });
     }
   });
@@ -220,23 +232,28 @@ export function mountTransactionRoutes(router: Router) {
   router.get('/category-comparison-history', async (req, res) => {
     try {
       const service = new TransactionService();
-      const startDate = req.query.start_date as string | undefined;
-      const endDate = req.query.end_date as string | undefined;
-      const categoryIds = req.query.category
-        ? (req.query.category as string).split(',').map(Number)
-        : undefined;
-      const result = await service.getCategoryComparisonHistory(
-        startDate,
-        endDate,
-        categoryIds
+      const response = await service.get(
+        '/transactions/reports/category-history',
+        {
+          start_date: (req.query.start_date as string) || HISTORY_EPOCH,
+          end_date: (req.query.end_date as string) || todayISODate(),
+          category: req.query.category,
+        }
       );
-      res.json(result);
-    } catch (error) {
+      res.status(response.status).json(response.data);
+    } catch (error: any) {
       console.error(error);
-      res.status(500).json({
+      res.status(error?.response?.status || 500).json({
         error: 'Failed to fetch data /category-comparison-history',
-        cause: error,
+        cause: error?.response?.data ?? error,
       });
     }
   });
+}
+
+// History charts default to the app's first month of data.
+const HISTORY_EPOCH = '2025-01-01';
+
+function todayISODate() {
+  return new Date().toISOString().split('T')[0];
 }
