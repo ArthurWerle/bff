@@ -51,6 +51,7 @@ export interface Category {
   color: string;
   created_at: string;
   updated_at: string;
+  deleted_at?: string | null;
 }
 
 export type CategoryComparisonDataPoint = {
