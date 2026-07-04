@@ -197,3 +197,49 @@ describe('overviewByMonth', () => {
     expect(result.expense.percentageVariation).toBeNull();
   });
 });
+
+// ---- getMonthlyExpensesByCategory ----
+
+describe('getMonthlyExpensesByCategory', () => {
+  it('labels soft-deleted categories instead of hiding their spend', async () => {
+    const service = new TransactionService();
+
+    jest.spyOn(service, 'getTransactionsByDateRange').mockResolvedValue({
+      count: 2,
+      transactions: [
+        makeTx({ type: 'expense', amount: 100, category_id: 1 }),
+        makeTx({ type: 'expense', amount: 40, category_id: 2 }),
+      ],
+    });
+    jest.spyOn(service, 'getCategories').mockResolvedValue({
+      count: 2,
+      categories: [
+        {
+          id: 1,
+          name: 'Food',
+          description: '',
+          color: '',
+          created_at: '',
+          updated_at: '',
+          deleted_at: null,
+        },
+        {
+          id: 2,
+          name: 'Old Hobby',
+          description: '',
+          color: '',
+          created_at: '',
+          updated_at: '',
+          deleted_at: '2026-06-01T00:00:00Z',
+        },
+      ],
+    });
+
+    const result = await service.getMonthlyExpensesByCategory(7, 2026);
+
+    expect(result).toEqual({
+      Food: 100,
+      'Old Hobby (deleted)': 40,
+    });
+  });
+});

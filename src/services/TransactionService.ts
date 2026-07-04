@@ -121,7 +121,12 @@ export class TransactionService extends Service {
     const categoryMap = new Map<number, CategoryComparisonHistory>(
       filteredCategories.map((c) => [
         c.id,
-        { category_id: c.id, category_name: c.name, color: c.color, data: [] },
+        {
+          category_id: c.id,
+          category_name: this.categoryDisplayName(c),
+          color: c.color,
+          data: [],
+        },
       ])
     );
 
@@ -222,11 +227,18 @@ export class TransactionService extends Service {
     };
   }
 
+  // Aggregations fetch soft-deleted categories too, so money that belongs to
+  // a removed category stays visible in reports — labeled, not hidden.
   async getCategories() {
     const { data } = await this.get<{ categories: Category[]; count: number }>(
-      '/categories'
+      '/categories',
+      { include_deleted: 'true' }
     );
     return data;
+  }
+
+  categoryDisplayName(category: Category) {
+    return category.deleted_at ? `${category.name} (deleted)` : category.name;
   }
 
   async getMonthlyExpensesByCategory(month?: number, year?: number) {
@@ -249,13 +261,14 @@ export class TransactionService extends Service {
 
     const totalValuesByCategory = expenses.reduce(
       (acc, transaction) => {
-        // Category is required, but its row may have been soft-deleted and
-        // dropped from /categories — keep the money visible under 'Other'
-        // instead of silently shrinking the chart.
+        // Soft-deleted categories arrive labeled; 'Other' only remains as a
+        // last-resort fallback so no money silently leaves the chart.
         const category = categories.find(
           (category) => category.id === transaction.category_id
         );
-        const categoryName = category?.name ?? 'Other';
+        const categoryName = category
+          ? this.categoryDisplayName(category)
+          : 'Other';
         const categoryValue = acc[categoryName] || 0;
         return { ...acc, [categoryName]: categoryValue + transaction.amount };
       },
