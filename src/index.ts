@@ -19,7 +19,9 @@ app.use(
 );
 
 app.use(morgan('combined'));
-app.use(express.json());
+// Chat attachments are base64-encoded images/audio, well past the default
+// 100kb JSON limit — allow larger bodies so /ai/scan uploads don't 413.
+app.use(express.json({ limit: '15mb' }));
 app.use(cookieParser());
 app.use('/api/bff', routes);
 
