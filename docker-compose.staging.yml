@@ -13,7 +13,7 @@ services:
       - stack.env
     environment:
       - TRANSACTION_V2_SERVICE_URL=http://transaction-service-v2:8080/api/v2
-      - AI_INTERNAL_URL=http://ai-internal-staging:3005/
+      - AI_INTERNAL_URL=http://ai-internal-staging:3005
 
 networks:
   back-end:
