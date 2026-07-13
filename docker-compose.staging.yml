@@ -8,11 +8,12 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "9082:3000"
+      - '9082:3000'
     env_file:
       - stack.env
     environment:
       - TRANSACTION_V2_SERVICE_URL=http://transaction-service-v2:8080/api/v2
+      - AI_INTERNAL_URL=http://ai-internal-staging:3005/
 
 networks:
   back-end:
