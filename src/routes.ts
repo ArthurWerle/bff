@@ -6,6 +6,7 @@ import { mountSubcategoryRoutes } from './handlers/subcategory';
 import { mountLocationRoutes } from './handlers/location';
 import { mountAuthRoutes } from './handlers/auth';
 import { mountFeatureFlagRoutes } from './handlers/featureFlags';
+import { mountAiRoutes } from './handlers/ai';
 import { authMiddleware } from './middleware/auth';
 
 const router = Router();
@@ -22,5 +23,6 @@ mountTypeRoutes(router);
 mountSubcategoryRoutes(router);
 mountLocationRoutes(router);
 mountFeatureFlagRoutes(router);
+mountAiRoutes(router);
 
 export default router;
