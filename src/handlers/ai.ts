@@ -51,6 +51,25 @@ const notFound = (res: any) =>
 export function mountAiRoutes(router: Router) {
   const aiRouter = Router();
 
+  // Current-month spending insight for the app header. ai-internal caches the
+  // analysis server-side (regenerating only when a significant transaction
+  // invalidated it), so this is a thin passthrough. The insight reflects the
+  // household's spendings rather than a single user, so there is no ownership
+  // check — only the optional language/refresh knobs are forwarded.
+  aiRouter.get('/insights', async (req, res) => {
+    try {
+      const service = new AiService();
+      const response = await service.get('/insights', {
+        language: req.query.language,
+        refresh: req.query.refresh,
+      });
+
+      res.status(response.status).json(response.data);
+    } catch (error: any) {
+      forwardError(res, error, 'GET /ai/insights');
+    }
+  });
+
   // Receipt/audio scanning: extracts and creates transactions from an image
   // or audio attachment. ai-internal answers 422 with { success:false, error }
   // when nothing is extractable — a normal outcome, not a proxy failure — so
