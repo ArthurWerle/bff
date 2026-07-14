@@ -395,4 +395,68 @@ describe('ai handlers', () => {
       expect(res.statusCode).toBe(404);
     });
   });
+
+  describe('GET /insights', () => {
+    it('forwards the cached insight through with the language/refresh knobs', async () => {
+      mockedGet.mockResolvedValue({
+        status: 200,
+        data: {
+          success: true,
+          insight: 'You reduced your grocery spending by 23% this month!',
+          cached: true,
+        },
+      });
+
+      const insights = findHandler(router, 'get', '/insights');
+      const res = buildRes();
+
+      await insights(
+        { query: { language: 'pt-BR' }, user: { id: 3 } } as any,
+        res
+      );
+
+      expect(mockedGet).toHaveBeenCalledWith('/insights', {
+        language: 'pt-BR',
+        refresh: undefined,
+      });
+      expect(res.statusCode).toBe(200);
+      expect(res.body).toEqual({
+        success: true,
+        insight: 'You reduced your grocery spending by 23% this month!',
+        cached: true,
+      });
+    });
+
+    it('does not require a chat ownership lookup', async () => {
+      mockedGet.mockResolvedValue({
+        status: 200,
+        data: { success: true, insight: 'ok' },
+      });
+
+      const insights = findHandler(router, 'get', '/insights');
+      const res = buildRes();
+
+      await insights({ query: {}, user: { id: 3 } } as any, res);
+
+      expect(mockedGet).toHaveBeenCalledTimes(1);
+      expect(mockedGet).toHaveBeenCalledWith('/insights', {
+        language: undefined,
+        refresh: undefined,
+      });
+    });
+
+    it('wraps a transport failure (no response) as 502', async () => {
+      mockedGet.mockRejectedValue(new Error('ECONNREFUSED'));
+
+      const insights = findHandler(router, 'get', '/insights');
+      const res = buildRes();
+
+      await insights({ query: {}, user: { id: 3 } } as any, res);
+
+      expect(res.statusCode).toBe(502);
+      expect(res.body.error).toBe(
+        'Failed to proxy request to GET /ai/insights'
+      );
+    });
+  });
 });
