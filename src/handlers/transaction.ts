@@ -170,6 +170,25 @@ export function mountTransactionRoutes(router: Router) {
     }
   });
 
+  transactionsRouter.post('/:id/change-amount', async (req, res) => {
+    try {
+      const service = new TransactionService();
+      const response = await service.post(
+        `/transactions/${req.params.id}/change-amount`,
+        req.body
+      );
+
+      res.status(response.status).json(response.data);
+    } catch (error: any) {
+      console.error(error);
+      res.status(error?.response?.status || 500).json({
+        error:
+          'Failed to proxy request to POST /transactions/:id/change-amount',
+        cause: error?.response?.data ?? error,
+      });
+    }
+  });
+
   router.use('/transactions', transactionsRouter);
 
   router.get('/overview/by-month', async (req, res) => {
